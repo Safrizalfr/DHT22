@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monitoring DHT22</title>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 50px; }
+    .data-box { display: inline-block; padding: 20px; border: 1px solid #ccc; border-radius: 10px; background: #f9f9f9; margin: 10px; width: 250px; }
+    h2 { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>DHT22 Realtime Dashboard</h1>
+  <div class="data-box">
+    <h2>Suhu</h2>
+    <p id="temp">-- °C</p>
+  </div>
+  <div class="data-box">
+    <h2>Kelembapan</h2>
+    <p id="humid">-- %</p>
+  </div>
+  <div class="data-box">
+    <h2>Waktu</h2>
+    <p id="time">--</p>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
+  <script>
+    // Ganti dengan konfigurasi dari Firebase kamu
+    const firebaseConfig = {
+      apiKey: "AIzaSyCISduBAOytWLyLxWcXr1YlTjp8szx0VaI",
+      authDomain: "coba-coba-f00c3.firebaseapp.com",
+      databaseURL: "https://coba-coba-f00c3-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "coba-coba-f00c3",
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database(app);
+    const ref = db.ref("/dht22_monitoring/current");
+
+    ref.on("value", (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        document.getElementById("temp").innerText = data.temperature + " °C";
+        document.getElementById("humid").innerText = data.humidity + " %";
+        document.getElementById("time").innerText = data.timestamp;
+      }
+    });
+  </script>
+</body>
+</html>
