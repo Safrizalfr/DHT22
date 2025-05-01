@@ -10,32 +10,31 @@
   <p><strong>Kelembaban:</strong> <span id="humidity">--</span> %</p>
   <p><strong>Timestamp:</strong> <span id="timestamp">--</span></p>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+  <!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCISduBAOytWLyLxWcXr1YlTjp8szx0VaI",
-      authDomain: "coba-coba-f00c3.firebaseapp.com",
-      databaseURL: "https://coba-coba-f00c3-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "coba-coba-f00c3",
-      storageBucket: "coba-coba-f00c3.appspot.com",
-      messagingSenderId: "313016699761",
-      appId: "1:313016699761:web:94dae874d372dd49b084d0"
-    };
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCISduBAOytWLyLxWcXr1YlTjp8szx0VaI",
+    authDomain: "coba-coba-f00c3.firebaseapp.com",
+    databaseURL: "https://coba-coba-f00c3-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "coba-coba-f00c3",
+    storageBucket: "coba-coba-f00c3.appspot.com",
+    messagingSenderId: "313016699761",
+    appId: "1:313016699761:web:ee8e400f00934198b084d0"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const dataRef = ref(db, "/dht22_monitoring/current");
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const ref = db.ref("/dht22_monitoring/current");
 
-    onValue(dataRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        document.getElementById("temperature").innerText = data.temperature ?? "--";
-        document.getElementById("humidity").innerText = data.humidity ?? "--";
-        document.getElementById("timestamp").innerText = data.timestamp ?? "--";
-      }
-    });
-  </script>
+  ref.on("value", snapshot => {
+    const data = snapshot.val();
+    document.getElementById("temperature").innerText = data?.temperature ?? "--";
+    document.getElementById("humidity").innerText = data?.humidity ?? "--";
+    document.getElementById("timestamp").innerText = data?.timestamp ?? "--";
+  });
+</script>
 </body>
 </html>
