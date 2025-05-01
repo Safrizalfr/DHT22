@@ -1,52 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Monitoring DHT22</title>
   <meta charset="UTF-8" />
-  <style>
-    body { font-family: Arial; text-align: center; margin-top: 50px; }
-    .data-box { display: inline-block; padding: 20px; border: 1px solid #ccc; border-radius: 10px; background: #f9f9f9; margin: 10px; width: 250px; }
-    h2 { margin-bottom: 10px; }
-  </style>
+  <title>DHT22 Realtime Dashboard</title>
 </head>
 <body>
-  <h1>DHT22 Realtime Dashboard</h1>
-  <div class="data-box">
-    <h2>Suhu</h2>
-    <p id="temp">-- °C</p>
-  </div>
-  <div class="data-box">
-    <h2>Kelembapan</h2>
-    <p id="humid">-- %</p>
-  </div>
-  <div class="data-box">
-    <h2>Waktu</h2>
-    <p id="time">--</p>
-  </div>
+  <h1>DHT22 Monitoring</h1>
+  <p><strong>Suhu:</strong> <span id="temperature">--</span> °C</p>
+  <p><strong>Kelembaban:</strong> <span id="humidity">--</span> %</p>
+  <p><strong>Timestamp:</strong> <span id="timestamp">--</span></p>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-  <script>
-    // Ganti dengan konfigurasi dari Firebase kamu
     const firebaseConfig = {
       apiKey: "AIzaSyCISduBAOytWLyLxWcXr1YlTjp8szx0VaI",
       authDomain: "coba-coba-f00c3.firebaseapp.com",
       databaseURL: "https://coba-coba-f00c3-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "coba-coba-f00c3",
+      storageBucket: "coba-coba-f00c3.appspot.com",
+      messagingSenderId: "313016699761",
+      appId: "1:313016699761:web:94dae874d372dd49b084d0"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.database(app);
-    const ref = db.ref("/dht22_monitoring/current");
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dataRef = ref(db, "/dht22_monitoring/current");
 
-    ref.on("value", (snapshot) => {
+    onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        document.getElementById("temp").innerText = data.temperature + " °C";
-        document.getElementById("humid").innerText = data.humidity + " %";
-        document.getElementById("time").innerText = data.timestamp;
+        document.getElementById("temperature").innerText = data.temperature ?? "--";
+        document.getElementById("humidity").innerText = data.humidity ?? "--";
+        document.getElementById("timestamp").innerText = data.timestamp ?? "--";
       }
     });
   </script>
