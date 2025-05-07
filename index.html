@@ -311,6 +311,60 @@
             color: white;
             font-size: 12px;
         }
+        
+        /* New styles for light-level display */
+        .light-level {
+            height: 30px;
+            background: linear-gradient(to right, #3498db, #f1c40f, #e67e22);
+            border-radius: 15px;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .light-level-marker {
+            position: absolute;
+            width: 4px;
+            height: 30px;
+            background-color: #2c3e50;
+            top: 0;
+            left: 0;
+            transition: left 0.3s ease;
+        }
+        
+        .light-level-label {
+            margin-top: 5px;
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        /* Tab navigation for charts */
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            background-color: #ecf0f1;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        .chart-tabs {
+            display: none;
+        }
+        
+        .chart-tabs.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -376,7 +430,21 @@
                         <div class="value" id="humidity">--</div>
                         <div class="unit">%</div>
                     </div>
+                    <div class="reading">
+                        <div class="label">Light Intensity</div>
+                        <div class="value" id="light-lux">--</div>
+                        <div class="unit">lux</div>
+                    </div>
+                    <div class="reading">
+                        <div class="label">Light Category</div>
+                        <div class="value" id="light-category">--</div>
+                        <div class="unit"></div>
+                    </div>
                 </div>
+                <div class="light-level">
+                    <div class="light-level-marker" id="light-level-marker"></div>
+                </div>
+                <div class="light-level-label">Dark ← → Bright Sunlight</div>
             </div>
             
             <div class="card">
@@ -400,21 +468,41 @@
                     <div class="reading">
                         <div class="label">Efficiency</div>
                         <div class="value" id="efficiency">--</div>
-                        <div class="unit">%</div>
+                        <div class="unit">mW/100lux</div>
                     </div>
                 </div>
             </div>
             
             <div class="card full-width">
-                <h2>Power History</h2>
-                <div class="chart-container">
-                    <canvas id="powerChart"></canvas>
+                <h2>History Charts</h2>
+                <div class="tabs">
+                    <div class="tab active" data-tab="power-chart">Power</div>
+                    <div class="tab" data-tab="light-chart">Light</div>
+                    <div class="tab" data-tab="temp-chart">Temperature</div>
+                </div>
+                
+                <div class="chart-tabs active" id="power-chart">
+                    <div class="chart-container">
+                        <canvas id="powerChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-tabs" id="light-chart">
+                    <div class="chart-container">
+                        <canvas id="lightChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-tabs" id="temp-chart">
+                    <div class="chart-container">
+                        <canvas id="tempChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         
         <footer>
-            <p>ESP32 Solar Tracker Dashboard - v1.0</p>
+            <p>ESP32 Solar Tracker Dashboard - v1.1</p>
         </footer>
     </div>
 
@@ -450,6 +538,9 @@
         const current = document.getElementById('current');
         const power = document.getElementById('power');
         const efficiency = document.getElementById('efficiency');
+        const lightLux = document.getElementById('light-lux');
+        const lightCategory = document.getElementById('light-category');
+        const lightLevelMarker = document.getElementById('light-level-marker');
         
         // Chart initialization
         const powerCtx = document.getElementById('powerChart').getContext('2d');
@@ -497,8 +588,123 @@
             }
         });
         
+        // Light chart
+        const lightCtx = document.getElementById('lightChart').getContext('2d');
+        const lightData = {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Light Intensity (lux)',
+                    data: [],
+                    borderColor: '#f39c12',
+                    backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        };
+        
+        const lightChart = new Chart(lightCtx, {
+            type: 'line',
+            data: lightData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Light (lux)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+        
+        // Temperature chart
+        const tempCtx = document.getElementById('tempChart').getContext('2d');
+        const tempData = {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Temperature (°C)',
+                    data: [],
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Humidity (%)',
+                    data: [],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }
+            ]
+        };
+        
+        const tempChart = new Chart(tempCtx, {
+            type: 'line',
+            data: tempData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Humidity (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+        
         // Update chart with new data point
-        function addDataPoint(chart, label, data) {
+        function addDataPoint(chart, label, data, datasetIndex = 0) {
             if (chart.data.labels.length > 20) {
                 chart.data.labels.shift();
                 chart.data.datasets.forEach((dataset) => {
@@ -506,10 +712,11 @@
                 });
             }
             
-            chart.data.labels.push(label);
-            chart.data.datasets.forEach((dataset) => {
-                dataset.data.push(data);
-            });
+            if (!chart.data.labels.includes(label)) {
+                chart.data.labels.push(label);
+            }
+            
+            chart.data.datasets[datasetIndex].data.push(data);
             chart.update();
         }
         
@@ -540,29 +747,47 @@
             ldrLeft.textContent = leftVal;
         }
         
-        // Calculate estimated efficiency based on current, voltage, and environmental factors
-        function calculateEfficiency(voltage, current, temperature) {
-            // This is a simplified model - in reality, you'd need more data
-            // Maximum theoretical efficiency at standard conditions (25°C)
-            const standardEfficiency = 17.5; // Typical for monocrystalline panels
-            
-            // Temperature coefficient (efficiency drops by ~0.4% per degree C above 25°C)
-            const tempCoefficient = 0.004;
-            
-            // Calculate temperature factor
-            const tempDiff = temperature - 25; // Difference from standard temp
-            const tempFactor = Math.max(0, 1 - (tempCoefficient * tempDiff));
-            
-            // Power output
-            const powerOutput = (voltage * current) / 1000; // in Watts
-            
-            // Simplified efficiency calculation
-            let calculatedEfficiency = standardEfficiency * tempFactor;
-            
-            // Limit to reasonable values
-            calculatedEfficiency = Math.max(0, Math.min(calculatedEfficiency, 22));
-            
-            return calculatedEfficiency.toFixed(1);
+        // Calculate estimated efficiency based on current, voltage, lux
+        function calculateEfficiency(power, lux) {
+            // Calculate power output per 100 lux
+            if (lux > 10 && power > 0) {
+                return (power / (lux / 100)).toFixed(2);
+            }
+            return "0.00";
+        }
+        
+        // Get light category based on lux value
+        function getLightCategory(lux) {
+            if (lux < 10) {
+                return "Very dark";
+            } else if (lux < 50) {
+                return "Dark";
+            } else if (lux < 200) {
+                return "Dim";
+            } else if (lux < 400) {
+                return "Normal indoor";
+            } else if (lux < 1000) {
+                return "Bright indoor";
+            } else if (lux < 5000) {
+                return "Indirect sunlight";
+            } else if (lux < 20000) {
+                return "Direct sunlight";
+            } else {
+                return "Very bright sun";
+            }
+        }
+        
+        // Update light level marker
+        function updateLightMarker(lux) {
+            // Log scale for better visualization
+            let position = 0;
+            if (lux > 0) {
+                // Map log scale of lux (1-100000) to 0-100%
+                const maxLux = 100000;
+                const logMax = Math.log10(maxLux);
+                position = (Math.log10(Math.min(lux, maxLux)) / logMax) * 100;
+            }
+            lightLevelMarker.style.left = position + "%";
         }
         
         // Event listeners for controls
@@ -601,6 +826,21 @@
             });
         });
         
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Hide all chart tabs
+                document.querySelectorAll('.chart-tabs').forEach(c => c.classList.remove('active'));
+                // Show selected chart tab
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+        
         // Listen for connection state changes
         const connectedRef = firebase.database().ref('.info/connected');
         connectedRef.on('value', (snap) => {
@@ -629,16 +869,21 @@
                 temperature.textContent = data.temperature ? data.temperature.toFixed(1) : '--';
                 humidity.textContent = data.humidity ? data.humidity.toFixed(1) : '--';
                 
+                // Update light data (BH1750 sensor)
+                const luxValue = data.light_lux || 0;
+                lightLux.textContent = luxValue.toFixed(1);
+                lightCategory.textContent = getLightCategory(luxValue);
+                updateLightMarker(luxValue);
+                
                 // Update power metrics
                 voltage.textContent = data.voltage ? data.voltage.toFixed(2) : '--';
                 current.textContent = data.current_ma ? data.current_ma.toFixed(2) : '--';
                 power.textContent = data.power_mw ? data.power_mw.toFixed(2) : '--';
                 
-                // Calculate and update efficiency
+                // Calculate and update efficiency (power per 100 lux)
                 const effValue = calculateEfficiency(
-                    data.voltage || 0, 
-                    data.current_ma || 0, 
-                    data.temperature || 25
+                    data.power_mw || 0, 
+                    data.light_lux || 0
                 );
                 efficiency.textContent = effValue;
                 
@@ -658,45 +903,8 @@
                 servoXSlider.disabled = data.auto_mode;
                 servoYSlider.disabled = data.auto_mode;
                 
-                // Add data point to chart
+                // Add data point to charts
                 const now = new Date();
                 const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + 
                                 now.getMinutes().toString().padStart(2, '0') + ':' + 
                                 now.getSeconds().toString().padStart(2, '0');
-                addDataPoint(powerChart, timeLabel, data.power_mw || 0);
-            }
-        });
-        
-        // Listen for settings updates
-        solarTrackerRef.child('settings').on('value', (snapshot) => {
-            const settings = snapshot.val();
-            if (settings) {
-                modeToggle.checked = settings.auto_mode;
-                servoXSlider.disabled = settings.auto_mode;
-                servoYSlider.disabled = settings.auto_mode;
-                
-                if (!servoXSlider.disabled) {
-                    servoXSlider.value = settings.manual_x || 100;
-                    servoXValue.textContent = settings.manual_x || 100;
-                }
-                
-                if (!servoYSlider.disabled) {
-                    servoYSlider.value = settings.manual_y || 90;
-                    servoYValue.textContent = settings.manual_y || 90;
-                }
-            }
-        });
-        
-        // Initialize settings in Firebase if they don't exist
-        solarTrackerRef.child('settings').once('value', (snapshot) => {
-            if (!snapshot.exists()) {
-                solarTrackerRef.child('settings').set({
-                    auto_mode: true,
-                    manual_x: 100,
-                    manual_y: 90
-                });
-            }
-        });
-    </script>
-</body>
-</html>
