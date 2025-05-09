@@ -448,51 +448,46 @@
             </div>
             
             <div class="card">
-                <h2>Power Metrics</h2>
+                <h2>Pengukuran Daya Baterai</h2>
                 <div class="readings">
                     <div class="reading">
                         <div class="label">Voltage</div>
-                        <div class="value" id="voltage">--</div>
+                        <div class="value" id="ina1-voltage">--</div>
                         <div class="unit">V</div>
                     </div>
                     <div class="reading">
                         <div class="label">Current</div>
-                        <div class="value" id="current">--</div>
+                        <div class="value" id="ina1-current">--</div>
                         <div class="unit">mA</div>
                     </div>
                     <div class="reading">
                         <div class="label">Power</div>
-                        <div class="value" id="power">--</div>
+                        <div class="value" id="ina1-power">--</div>
                         <div class="unit">mW</div>
-                    </div>
-                    <div class="reading">
-                        <div class="label">Efficiency</div>
-                        <div class="value" id="efficiency">--</div>
-                        <div class="unit">mW/100lux</div>
                     </div>
                 </div>
             </div>
+            
             <div class="card">
-                    <h2>INA219 Sensor 2</h2>
-                    <div class="readings">
-                        <div class="reading">
-                            <div class="label">Voltage</div>
-                            <div class="value" id="ina2-voltage">--</div>
-                            <div class="unit">V</div>
-                        </div>
-                        <div class="reading">
-                            <div class="label">Current</div>
-                            <div class="value" id="ina2-current">--</div>
-                            <div class="unit">mA</div>
-                        </div>
-                        <div class="reading">
-                            <div class="label">Power</div>
-                            <div class="value" id="ina2-power">--</div>
-                            <div class="unit">mW</div>
-                        </div>
+                <h2>Pengukuran Daya Panel</h2>
+                <div class="readings">
+                    <div class="reading">
+                        <div class="label">Voltage</div>
+                        <div class="value" id="ina2-voltage">--</div>
+                        <div class="unit">V</div>
+                    </div>
+                    <div class="reading">
+                        <div class="label">Current</div>
+                        <div class="value" id="ina2-current">--</div>
+                        <div class="unit">mA</div>
+                    </div>
+                    <div class="reading">
+                        <div class="label">Power</div>
+                        <div class="value" id="ina2-power">--</div>
+                        <div class="unit">mW</div>
                     </div>
                 </div>
-            
+            </div>
             <div class="card full-width">
                 <h2>History Charts</h2>
                 <div class="tabs">
@@ -558,15 +553,14 @@
         const panelPosition = document.getElementById('panel-position');
         const temperature = document.getElementById('temperature');
         const humidity = document.getElementById('humidity');
-        const voltage = document.getElementById('voltage');
-        const current = document.getElementById('current');
-        const power = document.getElementById('power');
-        const efficiency = document.getElementById('efficiency');
         const lightLux = document.getElementById('light-lux');
         const lightCategory = document.getElementById('light-category');
         const lightLevelMarker = document.getElementById('light-level-marker');
+        const ina1Voltage = document.getElementById('ina1-voltage');
         const ina2Voltage = document.getElementById('ina2-voltage');
+        const ina1Current = document.getElementById('ina1-current');
         const ina2Current = document.getElementById('ina2-current');
+        const ina1Power = document.getElementById('ina1-power');
         const ina2Power = document.getElementById('ina2-power');
         
         // Chart initialization
@@ -913,32 +907,25 @@
                 lightCategory.textContent = getLightCategory(luxValue);
                 updateLightMarker(luxValue);
                 
-                // Update power metrics
-                if (data.voltage !== undefined) {
-                    voltage.textContent = data.voltage.toFixed(2);
+                //update ina219
+                if (data.voltage_1 !== undefined) {
+                    ina1Voltage.textContent = data.voltage_1.toFixed(2);
                 }
-                if (data.current_ma !== undefined) {
-                    current.textContent = data.current_ma.toFixed(2);
+                if (data.voltage_2 !== undefined) {
+                    ina2Voltage.textContent = data.voltage_2.toFixed(2);
                 }
-                if (data.power_mw !== undefined) {
-                    power.textContent = data.power_mw.toFixed(2);
+                if (data.current_ma_1 !== undefined) {
+                    ina1Current.textContent = data.current_ma_1.toFixed(2);
                 }
-                // update INA219 Sensor 2
-                if (data.ina219_2_voltage !== undefined) {
-                    ina2Voltage.textContent = data.ina219_2_voltage.toFixed(2);
+                if (data.current_ma_2 !== undefined) {
+                    ina2Current.textContent = data.current_ma_2.toFixed(2);
                 }
-                if (data.ina219_2_current !== undefined) {
-                    ina2Current.textContent = data.ina219_2_current.toFixed(2);
+                if (data.power_mw_1 !== undefined) {
+                    ina1Power.textContent = data.power_mw_1.toFixed(2);
                 }
-                if (data.ina219_2_power !== undefined) {
-                    ina2Power.textContent = data.ina219_2_power.toFixed(2);
+                if (data.power_mw_2 !== undefined) {
+                    ina2Power.textContent = data.power_mw_2.toFixed(2);
                 }
-                // Calculate and update efficiency (power per 100 lux)
-                const effValue = calculateEfficiency(
-                    data.power_mw || 0, 
-                    data.light_lux || 0
-                );
-                efficiency.textContent = effValue;
                 
                 // Update servo position sliders (but don't trigger events)
                // Update servo position sliders (but don't trigger events)
