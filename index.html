@@ -944,8 +944,9 @@
                                 now.getMinutes().toString().padStart(2, '0') + ':' + 
                                 now.getSeconds().toString().padStart(2, '0');
                 
-                if (data.power_mw !== undefined) {
-                    addDataPoint(powerChart, timeLabel, data.power_mw);
+                const powerValue = data.power_mw_1 || data.power_mw_2 || 0;
+                if (powerValue > 0) {
+                    addDataPoint(powerChart, timeLabel, powerValue);
                 }
                 if (data.light_lux !== undefined) {
                     addDataPoint(lightChart, timeLabel, data.light_lux);
